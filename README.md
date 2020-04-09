@@ -1,4 +1,4 @@
-# coronavirus_misinfo
+# COVID-19_misinformation
 
 This repository scrapes and stores a SQLite database of COVID-19 misinformation articles.
 
