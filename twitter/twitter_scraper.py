@@ -11,7 +11,7 @@ api = tweepy.API(auth)
 
 id = '1260098159541452800'
 
-def get_single_tweet(id, api):
+def get_single_tweet_by_id(id, api):
     status = api.get_status(id, tweet_mode='extended')
     status_json = json.dumps(status._json)
     status_dict = json.loads(status_json)
@@ -64,4 +64,4 @@ def get_single_tweet(id, api):
     return {'real_tweet':real_tweet, 'hashtags_str':hashtags_str, 'all_media_urls':all_media_urls}
 
 
-get_single_tweet(id, api)
+get_single_tweet_by_id(id, api)
