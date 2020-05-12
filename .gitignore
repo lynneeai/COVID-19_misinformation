@@ -127,3 +127,6 @@ dmypy.json
 # VSCode
 .vscode/
 .vscode/settings.json
+
+# twitter data
+twitter_data/
