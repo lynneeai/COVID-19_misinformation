@@ -1,11 +1,11 @@
 import json
 import tweepy
-from twitter_api_config import API_CONFIG
+from twitter_api_key import API_KEY
 
-api_config = API_CONFIG()
+api_key = API_KEY()
 
-auth = tweepy.OAuthHandler(api_config.consumer_key, api_config.consumer_secret)
-auth.set_access_token(api_config.access_token_key, api_config.access_token_secret)
+auth = tweepy.OAuthHandler(api_key.consumer_key, api_key.consumer_secret)
+auth.set_access_token(api_key.access_token_key, api_key.access_token_secret)
 
 api = tweepy.API(auth)
 
