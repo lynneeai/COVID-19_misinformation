@@ -1,8 +1,15 @@
-import csv
+'''Solve import issue'''
 import os
+import sys
+current_file_dir = os.path.dirname(os.path.abspath(__file__))
+project_root_dir = f'{current_file_dir}/../../'
+sys.path.append(current_file_dir)
+sys.path.append(project_root_dir)
+
+import csv
 import sqlite3
 from datetime_converter import convert_datetime
-from sqlite_utils import *
+from utils.sqlite_utils import create_table, batch_insert, count_existing_rows, is_row_exists, clear_table
 
 CLEAR_TABLE = True
 DB_FILE = '../newsguard_tracked.db'
@@ -21,7 +28,7 @@ COLS_WITH_CONSTRAINTS = {COLS[0]: 'INTEGER PRIMARY KEY',
 CONN = sqlite3.connect(DB_FILE)
 CUR = CONN.cursor()
 
-create_table(TABLE_NAME, COLS_WITH_CONSTRAINTS, CUR)
+create_table(table_name=TABLE_NAME, cols_constraints_dict=COLS_WITH_CONSTRAINTS, cur=CUR)
 
 if CLEAR_TABLE:
 	clear_table(TABLE_NAME, CUR)

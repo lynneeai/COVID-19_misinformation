@@ -131,3 +131,7 @@ dmypy.json
 # twitter data
 twitter_data/
 twitter_api_key.py
+twitter.db
+
+# log files
+logs/
