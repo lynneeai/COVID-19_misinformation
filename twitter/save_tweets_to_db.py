@@ -8,6 +8,7 @@ sys.path.append(project_root_dir)
 
 import sqlite3
 import tweepy
+import traceback
 from tqdm import tqdm
 from twitter_api_key import API_KEY
 from twitter_scraper import get_single_tweet_by_id
@@ -67,7 +68,7 @@ COVID19_TWEETS.add_constraint(COVID19_TWEETS.cols.tweet_id, 'TEXT PRIMARY KEY')
 COVID19_TWEETS.add_foreign_key((COVID19_TWEETS.cols.tweet_id, f'{ALL_TWEETS.name}({ALL_TWEETS.cols.tweet_id})'))
 assert(len(COVID19_TWEETS.cols) == len(COVID19_TWEETS.cols_const))
 
-# -------2020election_tweets-------
+# -------election2020_tweets-------
 ELECTION_TWEETS = TABLE('election2020_tweets', ['tweet_id'])
 ELECTION_TWEETS.add_constraint(ELECTION_TWEETS.cols.tweet_id, 'TEXT PRIMARY KEY')
 ELECTION_TWEETS.add_foreign_key((ELECTION_TWEETS.cols.tweet_id, f'{ALL_TWEETS.name}({ALL_TWEETS.cols.tweet_id})'))
@@ -82,18 +83,23 @@ if __name__ == "__main__":
     '''create tables'''
     for t in [ALL_TWEETS, IMAGES, VIDEOS, GIFS, EXTERNALS, COVID19_TWEETS, ELECTION_TWEETS]:
         create_table(table_name=t.name, cols_constraints_dict=t.cols_const, cur=CUR, primary_key=t.pk, foreign_keys=t.fks)
+        CONN.commit()
 
     if CLEAR_TABLE:
         for t in [ALL_TWEETS, IMAGES, VIDEOS, GIFS, EXTERNALS, COVID19_TWEETS, ELECTION_TWEETS]:
             clear_table(t.name, CUR)
+            CONN.commit()
 
     '''covid19 scraper'''
-    covid19_scraper = COVID19_SCRAPER()
-    while covid19_scraper.has_next_batch():
-        obj = covid19_scraper.next_batch()
-        for t in [ALL_TWEETS, IMAGES, VIDEOS, GIFS, EXTERNALS, COVID19_TWEETS]:
-            batch_insert(t.name, t.cols_list, obj[t.name], CUR)
-            CONN.commit()
+    try:
+        covid19_scraper = COVID19_SCRAPER()
+        while covid19_scraper.has_next_batch():
+            obj = covid19_scraper.next_batch()
+            for t in [ALL_TWEETS, IMAGES, VIDEOS, GIFS, EXTERNALS, COVID19_TWEETS]:
+                batch_insert(t.name, t.cols_list, obj[t.name], CUR)
+                CONN.commit()
+    except:
+        print(traceback.format_exc())
 
     '''close db connection'''
     CONN.commit()

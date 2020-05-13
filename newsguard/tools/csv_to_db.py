@@ -29,9 +29,11 @@ CONN = sqlite3.connect(DB_FILE)
 CUR = CONN.cursor()
 
 create_table(table_name=TABLE_NAME, cols_constraints_dict=COLS_WITH_CONSTRAINTS, cur=CUR)
+CONN.commit()
 
 if CLEAR_TABLE:
 	clear_table(TABLE_NAME, CUR)
+	CONN.commit()
 
 csv_files = [item for item in os.listdir(CSV_ROOT) if item.endswith('.csv')]
 id_ptr = count_existing_rows(TABLE_NAME, COLS[0], CUR)

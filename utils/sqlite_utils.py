@@ -80,4 +80,5 @@ def drop_table(table_name, cur):
 
 def clear_table(table_name, cur):
     stmt = f'DELETE FROM {table_name};'
+    print(stmt)
     cur.execute(stmt)
