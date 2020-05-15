@@ -1,5 +1,6 @@
 import sys
 import time
+import json
 
 class DOT_DICT(dict):
     def __getattr__(self, key):
@@ -29,3 +30,6 @@ def oneline_print(msg):
     sys.stdout.write('\r                                         ')
     sys.stdout.write(f'\r{msg}')
     sys.stdout.flush()
+
+def print_dict(d):
+    print(json.dumps(d, indent=4, sort_keys=False))

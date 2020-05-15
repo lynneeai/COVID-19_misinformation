@@ -129,9 +129,12 @@ dmypy.json
 .vscode/settings.json
 
 # twitter data
-twitter_data/
-twitter_api_key.py
-twitter.db
+UIUC_dataset/
+twitter_api_config.py
+
+# db files
+*.db
+!newsguard_tracked.db
 
 # log files
 logs/

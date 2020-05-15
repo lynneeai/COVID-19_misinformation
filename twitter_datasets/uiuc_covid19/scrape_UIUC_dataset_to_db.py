@@ -2,7 +2,7 @@
 import os
 import sys
 current_file_dir = os.path.dirname(os.path.abspath(__file__))
-project_root_dir = f'{current_file_dir}/../'
+project_root_dir = f'{current_file_dir}/../../'
 sys.path.append(current_file_dir)
 sys.path.append(project_root_dir)
 
@@ -10,12 +10,11 @@ import sqlite3
 import tweepy
 import traceback
 from tqdm import tqdm
-from twitter_api_key import API_KEY
-from twitter_scraper import get_single_tweet_by_id
-from covid19_scraper import COVID19_SCRAPER
+from twitter_datasets.utils.twitter_scraper_utils import get_single_tweet_by_id
+from uiuc_scraper import UIUC_SCRAPER
 from utils.sqlite_utils import TABLE, create_table, clear_table, batch_insert
 
-DB_FILE = f'{current_file_dir}/twitter.db'
+DB_FILE = f'{current_file_dir}/uiuc_twitter.db'
 CLEAR_TABLE = True
 
 '''Tables Configs'''
