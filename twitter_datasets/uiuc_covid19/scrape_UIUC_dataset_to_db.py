@@ -12,20 +12,22 @@ import traceback
 from tqdm import tqdm
 from twitter_datasets.utils.twitter_scraper_utils import get_single_tweet_by_id
 from uiuc_scraper import UIUC_SCRAPER
-from utils.sqlite_utils import TABLE, create_table, clear_table, batch_insert
+from utils.sqlite_utils import TABLE, create_table, clear_table, drop_table, batch_insert
 from utils.all_utils import program_sleep
 
 DB_FILE = f'{current_file_dir}/uiuc_twitter.db'
 CLEAR_TABLE = False
+DROP_TABLE = False
 
 '''Tables Configs'''
 # -------covid19_tweets-------
-COVID19_TWEETS = TABLE('covid19_tweets', ['tweet_id', 'full_text', 'created_at', 'language', 'hashtags_str', 'favorite_count', 'retweet_count'])
+COVID19_TWEETS = TABLE('covid19_tweets', ['tweet_id', 'full_text', 'created_at', 'language', 'hashtags_str', 'mentions_str', 'favorite_count', 'retweet_count'])
 COVID19_TWEETS.add_constraint(COVID19_TWEETS.cols.tweet_id,       'TEXT PRIMARY KEY')
 COVID19_TWEETS.add_constraint(COVID19_TWEETS.cols.full_text,      'TEXT NOT NULL')
 COVID19_TWEETS.add_constraint(COVID19_TWEETS.cols.created_at,     'TEXT NOT NULL')
 COVID19_TWEETS.add_constraint(COVID19_TWEETS.cols.language,       'TEXT')
 COVID19_TWEETS.add_constraint(COVID19_TWEETS.cols.hashtags_str,   'TEXT')
+COVID19_TWEETS.add_constraint(COVID19_TWEETS.cols.mentions_str,   'TEXT')
 COVID19_TWEETS.add_constraint(COVID19_TWEETS.cols.favorite_count, 'INTEGER')
 COVID19_TWEETS.add_constraint(COVID19_TWEETS.cols.retweet_count,  'INTEGER')
 assert(len(COVID19_TWEETS.cols) == len(COVID19_TWEETS.cols_const))
@@ -70,37 +72,46 @@ assert(len(ELECTION_TWEETS.cols) == len(ELECTION_TWEETS.cols_const))
 
 if __name__ == "__main__":
 
-    '''db connection'''
-    CONN = sqlite3.connect(DB_FILE)
-    CUR = CONN.cursor()
+	'''db connection'''
+	CONN = sqlite3.connect(DB_FILE)
+	CUR = CONN.cursor()
 
-    '''create tables'''
-    for t in [COVID19_TWEETS, IMAGES, VIDEOS, GIFS, EXTERNALS, ELECTION_TWEETS]:
-        create_table(table_name=t.name, cols_constraints_dict=t.cols_const, cur=CUR, primary_key=t.pk, foreign_keys=t.fks)
-        CONN.commit()
+	try:
+		'''create tables'''
+		if DROP_TABLE:
+			for t in [COVID19_TWEETS, IMAGES, VIDEOS, GIFS, EXTERNALS, ELECTION_TWEETS]:
+				drop_table(t.name, CUR)
+				CONN.commit()
 
-    if CLEAR_TABLE:
-        for t in [COVID19_TWEETS, IMAGES, VIDEOS, GIFS, EXTERNALS, ELECTION_TWEETS]:
-            clear_table(t.name, CUR)
-            CONN.commit()
+		for t in [COVID19_TWEETS, IMAGES, VIDEOS, GIFS, EXTERNALS, ELECTION_TWEETS]:
+			create_table(table_name=t.name, cols_constraints_dict=t.cols_const, cur=CUR, primary_key=t.pk, foreign_keys=t.fks)
+			CONN.commit()
 
-    '''covid19 scraper'''
-    uiuc_scraper = UIUC_SCRAPER()
-    while uiuc_scraper.has_next_batch():
-        obj = uiuc_scraper.next_batch()
-        for t in [COVID19_TWEETS, IMAGES, VIDEOS, GIFS, EXTERNALS]:
-            try:
-                batch_insert(t.name, t.cols_list, obj[t.name], CUR)
-                CONN.commit()
-            except:
-                print(traceback.format_exc())
+		if CLEAR_TABLE:
+			for t in [COVID19_TWEETS, IMAGES, VIDEOS, GIFS, EXTERNALS, ELECTION_TWEETS]:
+				clear_table(t.name, CUR)
+				CONN.commit()
 
-        if obj['limit_exceeded']:
-            program_sleep(901)
+		'''covid19 scraper'''
+		uiuc_scraper = UIUC_SCRAPER()
+		while uiuc_scraper.has_next_batch():
+			obj = uiuc_scraper.next_batch()
+			for t in [COVID19_TWEETS, IMAGES, VIDEOS, GIFS, EXTERNALS]:
+				try:
+					batch_insert(t.name, t.cols_list, obj[t.name], CUR)
+					CONN.commit()
+				except:
+					print(traceback.format_exc())
 
-    '''close db connection'''
-    CONN.commit()
-    CONN.close()
+			if obj['limit_exceeded']:
+				program_sleep(901)
+
+	except:
+		print(traceback.format_exc())
+	
+	'''close db connection'''
+	CONN.commit()
+	CONN.close()
 
 
 

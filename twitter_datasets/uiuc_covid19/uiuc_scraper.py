@@ -10,6 +10,7 @@ import traceback
 from datetime import datetime
 from tqdm import tqdm
 from twitter_datasets.utils.twitter_scraper_utils import get_single_tweet_by_id
+from utils.all_utils import write_to_log
 
 ID_FILES_ROOT = './UIUC_dataset/'
 
@@ -28,20 +29,21 @@ class UIUC_SCRAPER:
 		self.next_cached_id_ptr = 0
 		self.log_file = f'../logs/uiuc_scraper_{datetime.now().strftime("%Y%m%d_%H:%M:%S")}.txt'
 
+		self.is_first_batch = True
+
 	def next_batch(self):
 		if self.next_cached_id_ptr >= len(self.cached_ids):
 			self.cached_ids = []
-			self.next_cached_id_ptr = 0
+			self.next_cached_id_ptr = self.next_cached_id_ptr if self.is_first_batch else 0
 			self.current_id_file = self.id_files[self.next_file_ptr]
 			with open(self.current_id_file, 'r') as infile:
 				for line in infile:
 					tweet_id = line.strip()
 					self.cached_ids.append(tweet_id)
 			
-			with open(self.log_file, 'a') as outfile:
-				outfile.writelines(f'-------[{datetime.now().strftime("%H:%M:%S")}] Starting processing file with idx {self.next_file_ptr}: {self.current_id_file}-------\n')
-			
+			write_to_log(self.log_file, f'-------[{datetime.now().strftime("%H:%M:%S")}] Starting processing file with idx {self.next_file_ptr}: {self.current_id_file}-------')
 			self.next_file_ptr += 1
+			self.is_first_batch = False
 
 		print(f'Getting Tweets in {self.current_id_file}...')
 		
@@ -57,8 +59,8 @@ class UIUC_SCRAPER:
 			try:
 				obj = get_single_tweet_by_id(tweet_id)
 				if obj:
-					covid19_tweets_todb.append([obj['tweet_id'], obj['full_text'], obj['created_at'], 
-											obj['language'], obj['hashtags_str'], obj['favorite_count'], obj['retweet_count']])
+					covid19_tweets_todb.append([obj['tweet_id'], obj['full_text'], obj['created_at'], obj['language'], 
+												obj['hashtags_str'], obj['mentions_str'], obj['favorite_count'], obj['retweet_count']])
 					for media in obj['all_media_urls']:
 						if media['media_type'] == 'photo':
 							images_todb.append([tweet_id, media['media_url']])
@@ -77,16 +79,13 @@ class UIUC_SCRAPER:
 					limit_exceeded = True
 					self.next_cached_id_ptr = idx
 
-					with open(self.log_file, 'a') as outfile:
-						outfile.writelines(f'**[{datetime.now().strftime("%H:%M:%S")}]** Finished {idx} tweets! Next tweet idx: {self.next_cached_id_ptr}\n')
+					write_to_log(self.log_file, f'**[{datetime.now().strftime("%H:%M:%S")}]** Finished {idx} tweets! Next tweet idx: {self.next_cached_id_ptr}')
 					break
 				else:
-					with open(self.log_file, 'a') as outfile:
-						outfile.writelines(f'{e}\n')
+					write_to_log(self.log_file, f'{e}')
 		
 		if not limit_exceeded:
-			with open(self.log_file, 'a') as outfile:
-				outfile.writelines(f'-------[{datetime.now().strftime("%H:%M:%S")}] Finished processing file with idx {self.next_file_ptr}: {self.current_id_file}-------\n\n')
+			write_to_log(self.log_file, f'-------[{datetime.now().strftime("%H:%M:%S")}] Finished processing file with idx {self.next_file_ptr}: {self.current_id_file}-------\n')
 
 		return {'limit_exceeded':limit_exceeded, 'covid19_tweets':covid19_tweets_todb, 'images':images_todb, 'videos':videos_todb, 
 				'gifs':gifs_todb, 'externals':externals_todb}

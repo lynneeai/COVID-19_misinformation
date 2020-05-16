@@ -25,6 +25,7 @@ def program_sleep(sec):
     for remaining in range(sec, 0, -1):
         oneline_print(f'Sleep for {remaining} seconds...')
         time.sleep(1)
+    print('Done sleeping!')
 
 def oneline_print(msg):
     sys.stdout.write('\r                                         ')
@@ -33,3 +34,7 @@ def oneline_print(msg):
 
 def print_dict(d):
     print(json.dumps(d, indent=4, sort_keys=False))
+
+def write_to_log(log_file, msg):
+    with open(log_file, 'a') as outfile:
+        outfile.writelines(f'{msg}\n')

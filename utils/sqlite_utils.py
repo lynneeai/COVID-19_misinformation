@@ -76,6 +76,7 @@ def update_row(table_name, id_val_dict, update_val_dict, cur):
 
 def drop_table(table_name, cur):
     stmt = f'DROP TABLE {table_name};'
+    print(stmt)
     cur.execute(stmt)
 
 def clear_table(table_name, cur):
