@@ -31,7 +31,7 @@ LABEL = api_config.label
 
 def get_tweet_details(tweet_dict, extended_mode=False, get_media_urls=False):
 	try:
-		print_dict(tweet_dict)
+		# print_dict(tweet_dict)
 		# tweet id
 		tweet_id = tweet_dict['id_str']
 
@@ -127,4 +127,4 @@ def premium_search(product, label, query, from_date, to_date, max_results=100):
 
 
 # premium_search(PRODUCT, LABEL, f'#covid19 lang:en', '202005140000', '202005150000')
-print(get_single_tweet_by_id('1261195933859053568', extended_mode=False, get_media_urls=False))
+# print(get_single_tweet_by_id('1261195933859053568', extended_mode=False, get_media_urls=False))
