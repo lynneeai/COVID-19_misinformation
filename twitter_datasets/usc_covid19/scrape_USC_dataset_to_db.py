@@ -11,11 +11,11 @@ import tweepy
 import traceback
 from tqdm import tqdm
 from twitter_datasets.utils.twitter_scraper_utils import get_single_tweet_by_id
-from uiuc_scraper import UIUC_SCRAPER
+from usc_scraper import USC_SCRAPER
 from utils.sqlite_utils import TABLE, create_table, clear_table, drop_table, batch_insert
 from utils.all_utils import program_sleep
 
-DB_FILE = f'{current_file_dir}/uiuc_twitter.db'
+DB_FILE = f'{current_file_dir}/usc_twitter.db'
 CLEAR_TABLE = False
 DROP_TABLE = False
 
@@ -93,9 +93,9 @@ if __name__ == "__main__":
 				CONN.commit()
 
 		'''covid19 scraper'''
-		uiuc_scraper = UIUC_SCRAPER()
-		while uiuc_scraper.has_next_batch():
-			obj = uiuc_scraper.next_batch()
+		usc_scraper = USC_SCRAPER()
+		while usc_scraper.has_next_batch():
+			obj = usc_scraper.next_batch()
 			for t in [COVID19_TWEETS, IMAGES, VIDEOS, GIFS, EXTERNALS]:
 				try:
 					batch_insert(t.name, t.cols_list, obj[t.name], CUR)
@@ -104,6 +104,7 @@ if __name__ == "__main__":
 					print(traceback.format_exc())
 
 			if obj['limit_exceeded']:
+				print('Rate limit exceeded!')
 				program_sleep(901)
 
 	except:

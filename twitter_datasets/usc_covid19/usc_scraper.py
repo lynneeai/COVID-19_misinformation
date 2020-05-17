@@ -12,9 +12,9 @@ from tqdm import tqdm
 from twitter_datasets.utils.twitter_scraper_utils import get_single_tweet_by_id
 from utils.all_utils import write_to_log
 
-ID_FILES_ROOT = './UIUC_dataset/'
+ID_FILES_ROOT = './USC_dataset/'
 
-class UIUC_SCRAPER:
+class USC_SCRAPER:
 	def __init__(self):
 		self.id_files = []
 		for folder in os.listdir(ID_FILES_ROOT):
@@ -22,12 +22,12 @@ class UIUC_SCRAPER:
 			for id_file in os.listdir(month_root):
 				self.id_files.append(f'{month_root}{id_file}')
 		self.id_files.sort(reverse=True)
-		self.next_file_ptr = 0
+		self.next_file_ptr = 2
 		self.current_id_file = ''
 
 		self.cached_ids = []
-		self.next_cached_id_ptr = 0
-		self.log_file = f'../logs/uiuc_scraper_{datetime.now().strftime("%Y%m%d_%H:%M:%S")}.txt'
+		self.next_cached_id_ptr = 47021
+		self.log_file = f'../logs/usc_scraper_{datetime.now().strftime("%Y%m%d_%H:%M:%S")}.txt'
 
 		self.is_first_batch = True
 
@@ -75,17 +75,17 @@ class UIUC_SCRAPER:
 				error_code = str(e).split('}]:')[0]
 				error_code = error_code.split('\'code\': ')[1]
 				if error_code == '88':
-					print('Rate limit exceeded!')
 					limit_exceeded = True
 					self.next_cached_id_ptr = idx
 
-					write_to_log(self.log_file, f'**[{datetime.now().strftime("%H:%M:%S")}]** Finished {idx} tweets! Next tweet idx: {self.next_cached_id_ptr}')
+					write_to_log(self.log_file, f'**[{datetime.now().strftime("%H:%M:%S")}]** Finished {idx} tweets in file {self.next_file_ptr - 1}! Next tweet idx: {self.next_cached_id_ptr}')
 					break
 				else:
 					write_to_log(self.log_file, f'{e}')
 		
 		if not limit_exceeded:
-			write_to_log(self.log_file, f'-------[{datetime.now().strftime("%H:%M:%S")}] Finished processing file with idx {self.next_file_ptr}: {self.current_id_file}-------\n')
+			self.next_cached_id_ptr = len(self.cached_ids)
+			write_to_log(self.log_file, f'-------[{datetime.now().strftime("%H:%M:%S")}] Finished processing file with idx {self.next_file_ptr - 1}: {self.current_id_file}-------\n')
 
 		return {'limit_exceeded':limit_exceeded, 'covid19_tweets':covid19_tweets_todb, 'images':images_todb, 'videos':videos_todb, 
 				'gifs':gifs_todb, 'externals':externals_todb}
