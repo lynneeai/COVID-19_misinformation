@@ -23,8 +23,10 @@ class DOT_DICT(dict):
 		return 'DOT_DICT(' + dict.__repr__(self) + ')'
 
 def program_sleep(sec):
-	for _ in tqdm(range(sec), bar_format='sleeping for {n_fmt}/{total_fmt} seconds...'):
+	trange = tqdm(range(sec), bar_format='sleeping for {n_fmt}/{total_fmt} seconds...', leave=False)
+	for _ in trange:
 		time.sleep(1)
+	trange.close()
 	print('Done sleeping!')
 
 def print_dict(d):

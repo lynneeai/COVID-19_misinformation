@@ -83,3 +83,15 @@ def clear_table(table_name, cur):
     stmt = f'DELETE FROM {table_name};'
     print(stmt)
     cur.execute(stmt)
+
+def get_columns_values(table_name, selecting_cols, cur, where_stmt=None):
+    cols_str = ', '.join(selecting_cols)
+    stmt = f'SELECT {cols_str} from {table_name}'
+    if where_stmt:
+        stmt += f' WHERE {where_stmt}'
+    stmt += ';'
+    print(stmt)
+    cur.execute(stmt)
+    return cur.fetchall()
+
+

@@ -26,8 +26,6 @@ TWEEPY_API = tweepy.API(auth)
 
 # api using TwitterAPI
 TAPI_API = TwitterAPI(consumer_key, consumer_secret, access_token_key, access_token_secret) 
-# PRODUCT = api_config.product_30
-# LABEL = api_config.label
 
 def get_tweet_details(tweet_dict, extended_mode=False, get_media_urls=False):
 	try:
@@ -144,6 +142,3 @@ def premium_search(product, label, query, from_date, to_date, max_results=100, n
 	# print(tweets_details)
 	return tweets_details, next_token
 
-
-# premium_search(PRODUCT, LABEL, f'#covid19 lang:en', '202005140000', '202005150000', max_results=10)
-# print(get_single_tweet_by_id('1261482251537219584', extended_mode=True, get_media_urls=False))

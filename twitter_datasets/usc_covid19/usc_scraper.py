@@ -7,6 +7,7 @@ sys.path.append(current_file_dir)
 sys.path.append(project_root_dir)
 
 import traceback
+import time
 from datetime import datetime
 from tqdm import tqdm
 from twitter_datasets.utils.twitter_scraper_utils import get_single_tweet_by_id
@@ -22,11 +23,11 @@ class USC_SCRAPER:
 			for id_file in os.listdir(month_root):
 				self.id_files.append(f'{month_root}{id_file}')
 		self.id_files.sort(reverse=True)
-		self.next_file_ptr = 2
+		self.next_file_ptr = 5
 		self.current_id_file = ''
 
 		self.cached_ids = []
-		self.next_cached_id_ptr = 47021
+		self.next_cached_id_ptr = 8011
 		self.log_file = f'../logs/usc_scraper_{datetime.now().strftime("%Y%m%d_%H:%M:%S")}.txt'
 
 		self.is_first_batch = True
@@ -54,7 +55,8 @@ class USC_SCRAPER:
 		gifs_todb = []
 		externals_todb = []
 		
-		for idx in tqdm(range(self.next_cached_id_ptr, len(self.cached_ids))):
+		trange = tqdm(range(self.next_cached_id_ptr, len(self.cached_ids)))
+		for idx in trange:
 			tweet_id = self.cached_ids[idx]
 			try:
 				obj = get_single_tweet_by_id(tweet_id)
@@ -72,17 +74,22 @@ class USC_SCRAPER:
 							externals_todb.append([tweet_id, media['media_url']])
 
 			except Exception as e:
-				error_code = str(e).split('}]:')[0]
-				error_code = error_code.split('\'code\': ')[1]
-				if error_code == '88':
-					limit_exceeded = True
-					self.next_cached_id_ptr = idx
-
-					write_to_log(self.log_file, f'**[{datetime.now().strftime("%H:%M:%S")}]** Finished {idx} tweets in file {self.next_file_ptr - 1}! Next tweet idx: {self.next_cached_id_ptr}')
-					break
-				else:
+				try:
+					error_code = str(e).split('}]:')[0]
+					error_code = error_code.split('\'code\': ')[1]
+					if error_code == '88':
+						limit_exceeded = True
+						self.next_cached_id_ptr = idx
+						write_to_log(self.log_file, f'**[{datetime.now().strftime("%H:%M:%S")}]** Finished {idx} tweets in file {self.next_file_ptr - 1}! Next tweet idx: {self.next_cached_id_ptr}')
+						trange.close()
+						break
+					else:
+						write_to_log(self.log_file, f'{e}')
+				except Exception as e:
 					write_to_log(self.log_file, f'{e}')
 		
+		trange.close()
+		time.sleep(1)
 		if not limit_exceeded:
 			self.next_cached_id_ptr = len(self.cached_ids)
 			write_to_log(self.log_file, f'-------[{datetime.now().strftime("%H:%M:%S")}] Finished processing file with idx {self.next_file_ptr - 1}: {self.current_id_file}-------\n')
