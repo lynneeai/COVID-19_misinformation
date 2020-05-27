@@ -144,7 +144,7 @@ class FILTERED_STREAM:
 									r_obj['like_count'], r_obj['quote_count'], r_obj['reply_count'], r_obj['retweet_count']]
 						insert('reweets', todb_values, self.db_cur)
 						self.db_conn.commit()
-						write_to_log(self.log_file, f'Saved to retweets! tweet_id: {tweet_id}')
+						write_to_log(self.log_file, f'Saved to retweets! tweet_id: {tweet_id}. Looking for parent tweet! tweet_id: {r_obj["parent_tweet_id"]}')
 
 						r_obj = get_single_tweet_by_id_labs(r_obj['parent_tweet_id'], self.auth)
 
@@ -154,6 +154,11 @@ class FILTERED_STREAM:
 
 				if not r_obj['is_retweet']:
 					try:
+						# find original tweet if is reply
+						if r_obj['is_reply']:
+							write_to_log(self.log_file, f'Reply tweet! tweet_id: {r_obj["tweet_id"]}. Looking for parent tweet! tweet_id: {r_obj["parent_tweet_id"]}')
+							r_obj = get_single_tweet_by_id_labs(r_obj['parent_tweet_id'], self.auth)
+
 						tweet_id = r_obj['tweet_id']
 						todb_values = [tweet_id, r_obj['author_id'], r_obj['created_at'], r_obj['text'], 
 									r_obj['expanded_urls'], r_obj['hashtags_str'], r_obj['mentions_str'], 

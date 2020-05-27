@@ -154,6 +154,7 @@ def get_tweet_details_labs(tweet_dict, metric_fieldname='stats'):
 				all_referred_details = tweet_dict['includes']['tweets']
 				parent_tweet_author_id = [item['author_id'] for item in all_referred_details if item['id'] == referred['id']][0]
 				r_obj = {'is_retweet': True,
+						 'is_reply': False,
 						 'tweet_id': data['id'],
 						 'author_id': data['author_id'],
 						 'created_at': data['created_at'],
@@ -163,6 +164,12 @@ def get_tweet_details_labs(tweet_dict, metric_fieldname='stats'):
 						 'quote_count': data[metric_fieldname]['quote_count'],
 						 'reply_count': data[metric_fieldname]['reply_count'],
 						 'retweet_count': data[metric_fieldname]['retweet_count']}
+				return r_obj
+			elif referred['type'] == 'replied_to':
+				r_obj = {'is_retweet': False,
+						 'is_reply': True,
+						 'tweet_id': data['id'],
+						 'parent_tweet_id': referred['id']}
 				return r_obj
 
 	# if not retweet
@@ -188,6 +195,7 @@ def get_tweet_details_labs(tweet_dict, metric_fieldname='stats'):
 		mentions_str = ''
 
 	r_obj = {'is_retweet': False,
+			 'is_reply': False,
 			 'tweet_id': data['id'],
 			 'author_id': data['author_id'],
 			 'created_at': data['created_at'],

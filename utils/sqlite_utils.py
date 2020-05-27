@@ -56,7 +56,6 @@ def insert(table_name, values, cur):
         values_str.append(v)
     values_str = ', '.join(values_str)
     stmt = f'INSERT INTO {table_name} VALUES ({values_str});'
-    print(stmt)
     cur.execute(stmt)
 
 def batch_insert(table_name, cols, values, cur):
