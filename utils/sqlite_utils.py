@@ -46,6 +46,19 @@ def create_table(table_name, cols_constraints_dict, cur, primary_key=None, forei
     print(stmt)
     cur.execute(stmt)
 
+def insert(table_name, values, cur):
+    values_str = []
+    for v in values:
+        if type(v) == str:
+            v = f'"{v}"'
+        else:
+            v = str(v)
+        values_str.append(v)
+    values_str = ', '.join(values_str)
+    stmt = f'INSERT INTO {table_name} VALUES ({values_str});'
+    print(stmt)
+    cur.execute(stmt)
+
 def batch_insert(table_name, cols, values, cur):
     cols_str = ', '.join(cols)
     cols_placeholder = ', '.join(['?' for i in range(len(cols))])

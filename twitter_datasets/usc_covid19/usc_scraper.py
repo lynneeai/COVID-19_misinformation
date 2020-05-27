@@ -23,11 +23,11 @@ class USC_SCRAPER:
 			for id_file in os.listdir(month_root):
 				self.id_files.append(f'{month_root}{id_file}')
 		self.id_files.sort(reverse=True)
-		self.next_file_ptr = 5
+		self.next_file_ptr = 14
 		self.current_id_file = ''
 
 		self.cached_ids = []
-		self.next_cached_id_ptr = 8011
+		self.next_cached_id_ptr = 29929
 		self.log_file = f'../logs/usc_scraper_{datetime.now().strftime("%Y%m%d_%H:%M:%S")}.txt'
 
 		self.is_first_batch = True

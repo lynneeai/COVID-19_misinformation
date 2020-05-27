@@ -8,10 +8,12 @@ sys.path.append(project_root_dir)
 
 import json
 import tweepy
+import requests
+import time
 import traceback
-from twitter_api_config import API_CONFIG
 from TwitterAPI import TwitterAPI
 from utils.all_utils import print_dict
+from twitter_api_config import API_CONFIG
 
 api_config = API_CONFIG()
 consumer_key = api_config.consumer_key
@@ -141,4 +143,70 @@ def premium_search(product, label, query, from_date, to_date, max_results=100, n
 
 	# print(tweets_details)
 	return tweets_details, next_token
+
+def get_tweet_details_labs(tweet_dict, metric_fieldname='stats'):
+	data = tweet_dict['data']
+	# if is retweet
+	# returns  tweet_id, author_id, created_at, parent_tweet_id, parent_tweet_author_id, like_count, quote_count, reply_count, retweet_count
+	if 'referenced_tweets' in data:
+		for referred in data['referenced_tweets']:
+			if referred['type'] == 'retweeted':
+				all_referred_details = tweet_dict['includes']['tweets']
+				parent_tweet_author_id = [item['author_id'] for item in all_referred_details if item['id'] == referred['id']][0]
+				r_obj = {'is_retweet': True,
+						 'tweet_id': data['id'],
+						 'author_id': data['author_id'],
+						 'created_at': data['created_at'],
+						 'parent_tweet_id': referred['id'],
+						 'parent_tweet_author_id': parent_tweet_author_id,
+						 'like_count': data[metric_fieldname]['like_count'],
+						 'quote_count': data[metric_fieldname]['quote_count'],
+						 'reply_count': data[metric_fieldname]['reply_count'],
+						 'retweet_count': data[metric_fieldname]['retweet_count']}
+				return r_obj
+
+	# if not retweet
+	# returns tweet_id, author_id, created_at, text, expanded_urls, hashtags_str, mentions_str, like_count, quote_count, reply_count, retweet_count
+
+	# expanded_urls
+	if 'urls' in data['entities']:
+		expanded_urls = [item['expanded_url'] for item in data['entities']['urls'] if 'expanded_url' in item]
+		expanded_urls = ','.join(expanded_urls)
+	else:
+		expanded_urls = ''
+	# hashtags
+	if 'hashtags' in data['entities']:
+		all_hashtags = data['entities']['hashtags']
+		hashtags_str = ','.join([f"#{tag['tag']}" for tag in all_hashtags])
+	else:
+		hashtags_str = ''
+	# user mentions
+	if 'mentions' in data['entities']:
+		all_user_mentions = data['entities']['mentions']
+		mentions_str = ','.join([f"@{at['username']}" for at in all_user_mentions])
+	else:
+		mentions_str = ''
+
+	r_obj = {'is_retweet': False,
+			 'tweet_id': data['id'],
+			 'author_id': data['author_id'],
+			 'created_at': data['created_at'],
+			 'text': data['text'],
+			 'expanded_urls': expanded_urls,
+			 'hashtags_str': hashtags_str,
+			 'mentions_str': mentions_str,
+			 'like_count': data[metric_fieldname]['like_count'],
+			 'quote_count': data[metric_fieldname]['quote_count'],
+			 'reply_count': data[metric_fieldname]['reply_count'],
+			 'retweet_count': data[metric_fieldname]['retweet_count']}
+	return r_obj
+	
+def get_single_tweet_by_id_labs(id, bearer_token):
+	endpoint_url = f'https://api.twitter.com/labs/2/tweets/{id}'
+	params = {'tweet.fields':'created_at,entities,public_metrics,author_id,referenced_tweets',
+			  'expansions':'referenced_tweets.id'}
+	response = requests.get(endpoint_url, auth=bearer_token, params=params)
+	# print_dict(response.json())
+
+	return get_tweet_details_labs(response.json(), metric_fieldname='public_metrics')
 
