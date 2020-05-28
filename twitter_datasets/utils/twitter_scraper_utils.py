@@ -174,10 +174,11 @@ def get_tweet_details_labs(tweet_dict, metric_fieldname='stats'):
 
 	# if not retweet
 	# returns tweet_id, author_id, created_at, text, expanded_urls, hashtags_str, mentions_str, like_count, quote_count, reply_count, retweet_count
-
 	# expanded_urls
 	if 'urls' in data['entities']:
 		expanded_urls = [item['expanded_url'] for item in data['entities']['urls'] if 'expanded_url' in item]
+		unwound_urls = [item['unwound_url'] for item in data['entities']['urls'] if 'unwound_url' in item]
+		expanded_urls.extend(unwound_urls)
 		expanded_urls = ','.join(expanded_urls)
 	else:
 		expanded_urls = ''
@@ -207,6 +208,7 @@ def get_tweet_details_labs(tweet_dict, metric_fieldname='stats'):
 			 'quote_count': data[metric_fieldname]['quote_count'],
 			 'reply_count': data[metric_fieldname]['reply_count'],
 			 'retweet_count': data[metric_fieldname]['retweet_count']}
+
 	return r_obj
 	
 def get_single_tweet_by_id_labs(id, bearer_token):
@@ -218,3 +220,40 @@ def get_single_tweet_by_id_labs(id, bearer_token):
 
 	return get_tweet_details_labs(response.json(), metric_fieldname='public_metrics')
 
+def recent_search_labs(query, start_time, end_time, next_token, bearer_token):
+	endpoint_url = f'https://api.twitter.com/labs/2/tweets/search'
+	headers = {"Accept-Encoding": "gzip"}
+	if next_token:
+		params = {'query':query,
+				  'tweet.fields':'created_at,entities,public_metrics,author_id,referenced_tweets',
+				  'start_time':start_time,
+				  'end_time':end_time,
+				  'max_results':100,
+				  'next_token':next_token}
+	else:
+		params = {'query':query,
+				  'tweet.fields':'created_at,entities,public_metrics,author_id,referenced_tweets',
+				  'start_time':start_time,
+				  'end_time':end_time,
+				  'max_results':100}
+
+	response = requests.get(endpoint_url, auth=bearer_token, headers=headers, params=params)
+	if response.status_code > 201:
+		raise Exception(f'{response.status_code}: {response.text}')
+
+	r_json = response.json()
+	tweet_dicts = r_json['data']
+	if 'next_token' in r_json['meta']:
+		next_token = r_json['meta']['next_token']
+	else:
+		next_token = 'Does not exist!'
+
+	r_obj_list = []
+	for tweet_dict in tweet_dicts:
+		try:
+			tweet_dict = {'data':tweet_dict}
+			r_obj_list.append(get_tweet_details_labs(tweet_dict, metric_fieldname='public_metrics'))
+		except Exception as e:
+			print(e)
+	
+	return {'r_obj_list':r_obj_list, 'next_token':next_token}

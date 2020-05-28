@@ -27,7 +27,7 @@ def program_sleep(sec):
 	for _ in trange:
 		time.sleep(1)
 	trange.close()
-	print('Done sleeping!')
+	print(f'Done sleeping! Slept {sec} seconds!')
 
 def print_dict(d):
 	print(json.dumps(d, indent=4, sort_keys=False))

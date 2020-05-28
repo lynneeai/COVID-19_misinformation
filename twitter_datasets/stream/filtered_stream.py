@@ -1,10 +1,3 @@
-'''
-Retweets
-	tweet_id, author_id, created_at, parent_tweet_id, parent_tweet_author_id, like_count, quote_count, reply_count, retweet_count
-
-Non retweets
-	tweet_id, author_id, created_at, text, expanded_urls, hashtags_str, mentions_str, like_count, quote_count, reply_count, retweet_count
-'''
 '''Solve import issue'''
 import os
 import sys
@@ -19,7 +12,7 @@ import requests
 import traceback
 from datetime import datetime, timedelta
 from utils.all_utils import print_dict, write_to_log, program_sleep
-from utils.sqlite_utils import TABLE, create_table, clear_table, drop_table, insert
+from utils.sqlite_utils import TABLE, create_table, clear_table, drop_table, batch_insert
 from twitter_datasets.utils.twitter_scraper_utils import get_tweet_details_labs, get_single_tweet_by_id_labs
 from twitter_datasets.utils.twitter_api_config import API_CONFIG, BearerTokenAuth
 
@@ -129,8 +122,8 @@ class FILTERED_STREAM:
 		if response.status_code > 201:
 			raise Exception(f'{response.status_code}: {response.text}')
 
-		window_count = 0
-		checkpoint_timestamp = datetime.now()
+		# window_count = 0
+		# checkpoint_timestamp = datetime.now()
 		for response_line in response.iter_lines():
 			if response_line:
 				tweet_dict = json.loads(response_line)
@@ -139,43 +132,60 @@ class FILTERED_STREAM:
 				# find original tweet if is retweet
 				while r_obj['is_retweet']:
 					try:
-						tweet_id = r_obj['tweet_id']
-						todb_values = [tweet_id, r_obj['author_id'], r_obj['created_at'], r_obj['parent_tweet_id'], r_obj['parent_tweet_author_id'], 
-									r_obj['like_count'], r_obj['quote_count'], r_obj['reply_count'], r_obj['retweet_count']]
-						insert('reweets', todb_values, self.db_cur)
+						todb_values = [r_obj['tweet_id'], r_obj['author_id'], r_obj['created_at'], r_obj['parent_tweet_id'], r_obj['parent_tweet_author_id'], 
+									   r_obj['like_count'], r_obj['quote_count'], r_obj['reply_count'], r_obj['retweet_count']]
+						batch_insert(REWEETS.name, REWEETS.cols, [todb_values], self.db_cur)
 						self.db_conn.commit()
-						write_to_log(self.log_file, f'Saved to retweets! tweet_id: {tweet_id}. Looking for parent tweet! tweet_id: {r_obj["parent_tweet_id"]}')
-
+						write_to_log(self.log_file, f'Saved to retweets! tweet_id: {r_obj["tweet_id"]}. Looking for parent tweet! tweet_id: {r_obj["parent_tweet_id"]}')
 						r_obj = get_single_tweet_by_id_labs(r_obj['parent_tweet_id'], self.auth)
 
 					except sqlite3.IntegrityError:
 						print('Retweet already saved!')
 						break
-
+					except sqlite3.OperationalError:
+						write_to_log(self.log_file, f'-------[ERROR] Cannot save to retweets! tweet_id: {r_obj["tweet_id"]}-------\n' +
+													f'Tweet values: {str(todb_values)}\n' +
+													f'Looking for parent tweet! tweet_id: {r_obj["parent_tweet_id"]}\n'+
+													f'----------------------------------------------------------------------------')
+						r_obj = get_single_tweet_by_id_labs(r_obj['parent_tweet_id'], self.auth)
+					except Exception as e:
+						write_to_log(self.log_file, e)
+						break
+					
 				if not r_obj['is_retweet']:
-					try:
-						# find original tweet if is reply
-						if r_obj['is_reply']:
+					# find original tweet if is reply
+					while r_obj['is_reply']:
+						try:
 							write_to_log(self.log_file, f'Reply tweet! tweet_id: {r_obj["tweet_id"]}. Looking for parent tweet! tweet_id: {r_obj["parent_tweet_id"]}')
 							r_obj = get_single_tweet_by_id_labs(r_obj['parent_tweet_id'], self.auth)
-
-						tweet_id = r_obj['tweet_id']
-						todb_values = [tweet_id, r_obj['author_id'], r_obj['created_at'], r_obj['text'], 
+						except Exception as e:
+							write_to_log(self.log_file, e)
+							break
+					
+					try:
+						todb_values = [r_obj['tweet_id'], r_obj['author_id'], r_obj['created_at'], r_obj['text'], 
 									r_obj['expanded_urls'], r_obj['hashtags_str'], r_obj['mentions_str'], 
 									r_obj['like_count'], r_obj['quote_count'], r_obj['reply_count'], r_obj['retweet_count']]
-						insert('regular_tweets', todb_values, self.db_cur)
+						batch_insert(REGULAR_TWEETS.name, REGULAR_TWEETS.cols, [todb_values], self.db_cur)
 						self.db_conn.commit()
-						write_to_log(self.log_file, f'Saved to regular_tweets! tweet_id: {tweet_id}')
+						write_to_log(self.log_file, f'Saved to regular_tweets! tweet_id: {r_obj["tweet_id"]}')
+
 					except sqlite3.IntegrityError:
 						print('Original tweet already saved!')
+					except sqlite3.OperationalError:
+						write_to_log(self.log_file, f'-------[ERROR] Cannot save to regular_tweets! tweet_id: {r_obj["tweet_id"]}-------\n' +
+													f'Tweet values: {str(todb_values)}\n' +
+													f'----------------------------------------------------------------------------------')
+					except Exception as e:
+						write_to_log(self.log_file, e)
 
-				# maximum 12 tweets per minute to avoid using up quota
-				window_count += 1
-				if window_count >= 12:
-					if datetime.now() - checkpoint_timestamp < timedelta(minutes=1):
-						program_sleep(60)
-					window_count = 0
-					checkpoint_timestamp = datetime.now()
+				# # maximum 12 tweets per minute to avoid using up quota
+				# window_count += 1
+				# if window_count >= 12:
+				# 	if datetime.now() - checkpoint_timestamp < timedelta(minutes=1):
+				# 		program_sleep(60)
+				# 	window_count = 0
+				# 	checkpoint_timestamp = datetime.now()
 
 				
 if __name__ == "__main__":
@@ -217,8 +227,7 @@ if __name__ == "__main__":
 					program_sleep(2 ** timeout)
 					timeout += 1
 				else:
-					raise Exception(e)
-
+					print(e)
 	except:
 		print(traceback.format_exc())
 

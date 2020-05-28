@@ -50,6 +50,7 @@ def insert(table_name, values, cur):
     values_str = []
     for v in values:
         if type(v) == str:
+            v.replace('"', "'")
             v = f'"{v}"'
         else:
             v = str(v)
