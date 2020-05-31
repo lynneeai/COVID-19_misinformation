@@ -172,28 +172,26 @@ def get_tweet_details_labs(tweet_dict, metric_fieldname='stats'):
 						 'parent_tweet_id': referred['id']}
 				return r_obj
 
-	# if not retweet
-	# returns tweet_id, author_id, created_at, text, expanded_urls, hashtags_str, mentions_str, like_count, quote_count, reply_count, retweet_count
-	# expanded_urls
-	if 'urls' in data['entities']:
-		expanded_urls = [item['expanded_url'] for item in data['entities']['urls'] if 'expanded_url' in item]
-		unwound_urls = [item['unwound_url'] for item in data['entities']['urls'] if 'unwound_url' in item]
-		expanded_urls.extend(unwound_urls)
-		expanded_urls = ','.join(expanded_urls)
-	else:
-		expanded_urls = ''
-	# hashtags
-	if 'hashtags' in data['entities']:
-		all_hashtags = data['entities']['hashtags']
-		hashtags_str = ','.join([f"#{tag['tag']}" for tag in all_hashtags])
-	else:
-		hashtags_str = ''
-	# user mentions
-	if 'mentions' in data['entities']:
-		all_user_mentions = data['entities']['mentions']
-		mentions_str = ','.join([f"@{at['username']}" for at in all_user_mentions])
-	else:
-		mentions_str = ''
+	expanded_urls = ''
+	hashtags_str = ''
+	mentions_str = ''
+	if 'entities' in data:
+		# if not retweet
+		# returns tweet_id, author_id, created_at, text, expanded_urls, hashtags_str, mentions_str, like_count, quote_count, reply_count, retweet_count
+		# expanded_urls
+		if 'urls' in data['entities']:
+			expanded_urls = [item['expanded_url'] for item in data['entities']['urls'] if 'expanded_url' in item]
+			unwound_urls = [item['unwound_url'] for item in data['entities']['urls'] if 'unwound_url' in item]
+			expanded_urls.extend(unwound_urls)
+			expanded_urls = ','.join(expanded_urls)
+		# hashtags
+		if 'hashtags' in data['entities']:
+			all_hashtags = data['entities']['hashtags']
+			hashtags_str = ','.join([f"#{tag['tag']}" for tag in all_hashtags])
+		# user mentions
+		if 'mentions' in data['entities']:
+			all_user_mentions = data['entities']['mentions']
+			mentions_str = ','.join([f"@{at['username']}" for at in all_user_mentions])
 
 	r_obj = {'is_retweet': False,
 			 'is_reply': False,
@@ -239,6 +237,7 @@ def recent_search_labs(query, start_time, end_time, next_token, bearer_token):
 
 	response = requests.get(endpoint_url, auth=bearer_token, headers=headers, params=params)
 	if response.status_code > 201:
+		print_dict(params)
 		raise Exception(f'{response.status_code}: {response.text}')
 
 	r_json = response.json()
