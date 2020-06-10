@@ -46,18 +46,19 @@ REGULAR_TWEETS.add_constraint(REGULAR_TWEETS.cols.retweet_count,  'INTEGER')
 assert(len(REGULAR_TWEETS.cols) == len(REGULAR_TWEETS.cols_const))
 
 # -------retweets-------
-REWEETS = TABLE('reweets', ['tweet_id', 'author_id', 'created_at', 'parent_tweet_id', 'parent_tweet_author_id', 
-							'like_count', 'quote_count', 'reply_count', 'retweet_count'])
-REWEETS.add_constraint(REWEETS.cols.tweet_id,              'TEXT PRIMARY KEY')
-REWEETS.add_constraint(REWEETS.cols.author_id,             'TEXT NOT NULL')
-REWEETS.add_constraint(REWEETS.cols.created_at,            'TEXT NOT NULL')
-REWEETS.add_constraint(REWEETS.cols.parent_tweet_id,       'TEXT NOT NULL')
-REWEETS.add_constraint(REWEETS.cols.parent_tweet_author_id,'TEXT NOT NULL')
-REWEETS.add_constraint(REWEETS.cols.like_count,            'INTEGER')
-REWEETS.add_constraint(REWEETS.cols.quote_count,           'INTEGER')
-REWEETS.add_constraint(REWEETS.cols.reply_count,           'INTEGER')
-REWEETS.add_constraint(REWEETS.cols.retweet_count,         'INTEGER')
-assert(len(REWEETS.cols) == len(REWEETS.cols_const))
+RETWEETS = TABLE('retweets', ['tweet_id', 'author_id', 'created_at', 'parent_tweet_id', 'parent_tweet_author_id', 
+							  'like_count', 'quote_count', 'reply_count', 'retweet_count', 'text'])
+RETWEETS.add_constraint(RETWEETS.cols.tweet_id,              'TEXT PRIMARY KEY')
+RETWEETS.add_constraint(RETWEETS.cols.author_id,             'TEXT NOT NULL')
+RETWEETS.add_constraint(RETWEETS.cols.created_at,            'TEXT NOT NULL')
+RETWEETS.add_constraint(RETWEETS.cols.parent_tweet_id,       'TEXT NOT NULL')
+RETWEETS.add_constraint(RETWEETS.cols.parent_tweet_author_id,'TEXT NOT NULL')
+RETWEETS.add_constraint(RETWEETS.cols.like_count,            'INTEGER')
+RETWEETS.add_constraint(RETWEETS.cols.quote_count,           'INTEGER')
+RETWEETS.add_constraint(RETWEETS.cols.reply_count,           'INTEGER')
+RETWEETS.add_constraint(RETWEETS.cols.retweet_count,         'INTEGER')
+RETWEETS.add_constraint(RETWEETS.cols.text,                  'TEXT')
+assert(len(RETWEETS.cols) == len(RETWEETS.cols_const))
 
 class FILTERED_STREAM:
 	def __init__(self, bearer_token, filter_rules, db_conn, db_cur):
@@ -133,8 +134,8 @@ class FILTERED_STREAM:
 				while r_obj['is_retweet']:
 					try:
 						todb_values = [r_obj['tweet_id'], r_obj['author_id'], r_obj['created_at'], r_obj['parent_tweet_id'], r_obj['parent_tweet_author_id'], 
-									   r_obj['like_count'], r_obj['quote_count'], r_obj['reply_count'], r_obj['retweet_count']]
-						batch_insert(REWEETS.name, REWEETS.cols, [todb_values], self.db_cur)
+									   r_obj['like_count'], r_obj['quote_count'], r_obj['reply_count'], r_obj['retweet_count'], r_obj['text']]
+						batch_insert(RETWEETS.name, RETWEETS.cols, [todb_values], self.db_cur)
 						self.db_conn.commit()
 						write_to_log(self.log_file, f'Saved to retweets! tweet_id: {r_obj["tweet_id"]}. Looking for parent tweet! tweet_id: {r_obj["parent_tweet_id"]}')
 						r_obj = get_single_tweet_by_id_labs(r_obj['parent_tweet_id'], self.auth)
@@ -164,8 +165,8 @@ class FILTERED_STREAM:
 					
 					try:
 						todb_values = [r_obj['tweet_id'], r_obj['author_id'], r_obj['created_at'], r_obj['text'], 
-									r_obj['expanded_urls'], r_obj['hashtags_str'], r_obj['mentions_str'], 
-									r_obj['like_count'], r_obj['quote_count'], r_obj['reply_count'], r_obj['retweet_count']]
+									  r_obj['expanded_urls'], r_obj['hashtags_str'], r_obj['mentions_str'], 
+									  r_obj['like_count'], r_obj['quote_count'], r_obj['reply_count'], r_obj['retweet_count']]
 						batch_insert(REGULAR_TWEETS.name, REGULAR_TWEETS.cols, [todb_values], self.db_cur)
 						self.db_conn.commit()
 						write_to_log(self.log_file, f'Saved to regular_tweets! tweet_id: {r_obj["tweet_id"]}')
@@ -200,16 +201,16 @@ if __name__ == "__main__":
 	try:
 		'''create tables'''
 		if DROP_TABLE:
-			for t in [REGULAR_TWEETS, REWEETS]:
+			for t in [REGULAR_TWEETS, RETWEETS]:
 				drop_table(t.name, CUR)
 				CONN.commit()
 
-		for t in [REGULAR_TWEETS, REWEETS]:
+		for t in [REGULAR_TWEETS, RETWEETS]:
 			create_table(table_name=t.name, cols_constraints_dict=t.cols_const, cur=CUR, primary_key=t.pk, foreign_keys=t.fks)
 			CONN.commit()
 
 		if CLEAR_TABLE:
-			for t in [REGULAR_TWEETS, REWEETS]:
+			for t in [REGULAR_TWEETS, RETWEETS]:
 				clear_table(t.name, CUR)
 				CONN.commit()
 

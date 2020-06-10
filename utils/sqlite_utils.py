@@ -78,14 +78,30 @@ def is_row_exists(table_name, cols_vals_dict, cur):
     result = cur.fetchone()[0]
     return result != 0
 
-def update_row(table_name, id_val_dict, update_val_dict, cur):
-    set_stmt = ', '.join([f'{col_name}=\'{col_val}\'' for col_name, col_val in update_val_dict.items()])
-    id_col = id_val_dict.keys()[0]
-    where_stmt = f'{id_col}={id_val_dict[id_col]}'
+def update_row(table_name, id_col, cols, values, cur):
+    set_stmt = ', '.join([f'{col_name}=?' for col_name in cols])
+    where_stmt = f'{id_col}=?'
     stmt = f'''UPDATE {table_name}
                 SET {set_stmt}
-                WHERE {where_stmt}'''
-    cur.execute(stmt)
+                WHERE {where_stmt};'''
+    try:
+        cur.executemany(stmt, values)
+    except:
+        print(stmt)
+
+def add_column(table_name, col_name, col_type, cur):
+    columns = [i[1] for i in cur.execute('PRAGMA table_info(retweets)')]
+    if col_name not in columns:
+        stmt = f'ALTER TABLE {table_name} ADD COLUMN {col_name} {col_type};'
+        cur.execute(stmt)
+
+def update_table_name(old_table_name, new_table_name, cur):
+    sanity_check_stmt = f'SELECT name FROM sqlite_master WHERE type="table" AND name="{old_table_name}";'
+    cur.execute(sanity_check_stmt)
+    result = cur.fetchone()
+    if old_table_name != new_table_name and result:
+        stmt = f'ALTER TABLE {old_table_name} RENAME TO {new_table_name};'
+        cur.execute(stmt)
 
 def drop_table(table_name, cur):
     stmt = f'DROP TABLE {table_name};'
@@ -103,7 +119,7 @@ def get_columns_values(table_name, selecting_cols, cur, where_stmt=None):
     if where_stmt:
         stmt += f' WHERE {where_stmt}'
     stmt += ';'
-    print(stmt)
+    # print(stmt)
     cur.execute(stmt)
     return cur.fetchall()
 

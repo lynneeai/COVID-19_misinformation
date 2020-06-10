@@ -158,6 +158,7 @@ def get_tweet_details_labs(tweet_dict, metric_fieldname='stats'):
 						 'tweet_id': data['id'],
 						 'author_id': data['author_id'],
 						 'created_at': data['created_at'],
+						 'text': data['text'],
 						 'parent_tweet_id': referred['id'],
 						 'parent_tweet_author_id': parent_tweet_author_id,
 						 'like_count': data[metric_fieldname]['like_count'],
@@ -214,7 +215,15 @@ def get_single_tweet_by_id_labs(id, bearer_token):
 	params = {'tweet.fields':'created_at,entities,public_metrics,author_id,referenced_tweets',
 			  'expansions':'referenced_tweets.id'}
 	response = requests.get(endpoint_url, auth=bearer_token, params=params)
+	if response.status_code > 201:
+		# print_dict(params)
+		raise Exception(f'{response.status_code}: {response.text}')
+	# print(f'{response.status_code}: {response.text}')
 	# print_dict(response.json())
+
+	r_json = response.json()
+	if 'errors' in r_json:
+		raise Exception(f'[Self Defined]Error in response!')
 
 	return get_tweet_details_labs(response.json(), metric_fieldname='public_metrics')
 
