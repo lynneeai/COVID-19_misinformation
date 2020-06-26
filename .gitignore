@@ -130,7 +130,9 @@ dmypy.json
 
 # twitter data
 USC_dataset/
-twitter_api_config.py
+
+# api keys
+api_keys.py
 
 # db files
 *.db

@@ -13,13 +13,13 @@ import time
 import traceback
 from TwitterAPI import TwitterAPI
 from utils.all_utils import print_dict
-from twitter_api_config import API_CONFIG
+from api_keys import TWITTER_API_KEYS
 
-api_config = API_CONFIG()
-consumer_key = api_config.consumer_key
-consumer_secret = api_config.consumer_secret
-access_token_key = api_config.access_token_key
-access_token_secret = api_config.access_token_secret
+twitter_api_keys = TWITTER_API_KEYS()
+consumer_key = twitter_api_keys.consumer_key
+consumer_secret = twitter_api_keys.consumer_secret
+access_token_key = twitter_api_keys.access_token_key
+access_token_secret = twitter_api_keys.access_token_secret
 
 # api using Tweepy
 auth = tweepy.OAuthHandler(consumer_key, consumer_secret)

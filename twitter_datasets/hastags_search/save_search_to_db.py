@@ -12,7 +12,7 @@ from tqdm import tqdm
 from datetime import datetime, timedelta
 from hashtags_searcher import HASHTAGS_SEARCHER
 from utils.sqlite_utils import TABLE, create_table, clear_table, drop_table, batch_insert
-from twitter_datasets.utils.twitter_api_config import API_CONFIG
+from twitter_datasets.utils.api_keys import TWITTER_API_KEYS
 
 DB_FILE = f'{current_file_dir}/hashtags_search.db'
 CLEAR_TABLE = False
@@ -82,7 +82,7 @@ if __name__ == "__main__":
 		table_hashtags_dict = {COVID19_TRUNCATED.name: ['#covid19'],
 							   ELECTION_TRUNCATED.name: ['#2020election'],
 							   BOTH_TRUNCATED.name: ['#covid19', '#2020election']}
-		api_config = API_CONFIG()
+		twitter_api_keys = TWITTER_API_KEYS()
 
 		if SEARCH_MODE == '30day':
 			'''30day search'''
@@ -93,7 +93,7 @@ if __name__ == "__main__":
 			for t in [COVID19_TRUNCATED, ELECTION_TRUNCATED, BOTH_TRUNCATED]:
 				print(f'Start {SEARCH_MODE} search for {t.name}...')
 				hashtags = table_hashtags_dict[t.name]
-				searcher = HASHTAGS_SEARCHER(product=api_config.product_30, label=api_config.label, hashtags=hashtags,
+				searcher = HASHTAGS_SEARCHER(product=twitter_api_keys.product_30, label=twitter_api_keys.label, hashtags=hashtags,
 											from_date=from_date, to_date=to_date, tweets_per_day=tweets_per_day)
 				while searcher.has_next_batch():
 					obj = searcher.next_batch()
@@ -111,7 +111,7 @@ if __name__ == "__main__":
 			for t in [ELECTION_TRUNCATED, BOTH_TRUNCATED]:
 				print(f'Start {SEARCH_MODE} day search for {t.name}...')
 				hashtags = table_hashtags_dict[t.name]
-				searcher = HASHTAGS_SEARCHER(product=api_config.product_full, label=api_config.label, hashtags=hashtags,
+				searcher = HASHTAGS_SEARCHER(product=twitter_api_keys.product_full, label=twitter_api_keys.label, hashtags=hashtags,
 											from_date=from_date, to_date=to_date, tweets_per_day=tweets_per_day)
 				while searcher.has_next_batch():
 					obj = searcher.next_batch()

@@ -22,7 +22,7 @@ from urllib.parse import urlparse
 from twitter_datasets.utils.tweets_utils import tweet_toks
 from utils.all_utils import print_dict
 from utils.sqlite_utils import get_columns_values
-from twitter_datasets.utils.twitter_api_config import API_CONFIG
+from twitter_datasets.utils.api_keys import TWITTER_API_KEYS, RAPID_API_KEYS
 
 '''
 Read data and preprocess
@@ -162,17 +162,17 @@ plt.close()
 '''
 bot detection
 '''
-api_config = API_CONFIG()
-consumer_key = api_config.consumer_key
-consumer_secret = api_config.consumer_secret
-access_token = api_config.access_token_key
-access_token_secret = api_config.access_token_secret
+twitter_api_keys = TWITTER_API_KEYS()
+consumer_key = twitter_api_keys.consumer_key
+consumer_secret = twitter_api_keys.consumer_secret
+access_token = twitter_api_keys.access_token_key
+access_token_secret = twitter_api_keys.access_token_secret
 twitter_app_auth = {'consumer_key': consumer_key,
                     'consumer_secret': consumer_secret,
                     'access_token': access_token,
                     'access_token_secret': access_token_secret}
 
-rapidapi_key = 'd5f0dab52fmsh56d1dddaf59c062p1eb595jsnf139697eb33a'
+rapidapi_key = RAPID_API_KEYS().application_key
 
 bom = botometer.Botometer(wait_on_ratelimit=True, rapidapi_key=rapidapi_key, **twitter_app_auth)
 

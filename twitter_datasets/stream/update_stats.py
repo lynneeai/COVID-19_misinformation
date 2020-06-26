@@ -15,11 +15,12 @@ from datetime import datetime, timedelta
 from utils.all_utils import print_dict, write_to_log, program_sleep
 from utils.sqlite_utils import TABLE, get_columns_values, update_table_name, add_column, update_row
 from twitter_datasets.utils.twitter_scraper_utils import get_single_tweet_by_id_labs
-from twitter_datasets.utils.twitter_api_config import API_CONFIG, BearerTokenAuth
+from twitter_datasets.utils.api_keys import TWITTER_API_KEYS
+from twitter_datasets.utils.twitter_auth import BearerTokenAuth
 
-api_config = API_CONFIG()
-consumer_key = api_config.consumer_key
-consumer_secret = api_config.consumer_secret
+twitter_api_keys = TWITTER_API_KEYS()
+consumer_key = twitter_api_keys.consumer_key
+consumer_secret = twitter_api_keys.consumer_secret
 
 DB_FILE = f'{current_file_dir}/election_stream.db'
 TABLE_NAME = 'regular_tweets'
