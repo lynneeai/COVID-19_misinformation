@@ -132,7 +132,7 @@ dmypy.json
 USC_dataset/
 
 # api keys
-api_keys.py
+api_keys*.py
 
 # db files
 *.db
