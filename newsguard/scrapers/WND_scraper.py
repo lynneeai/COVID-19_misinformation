@@ -8,22 +8,22 @@ from selenium import webdriver
 from tqdm import tqdm
 
 REFETCH_URLS = False
-url_temp_file = './WND_urls'
+url_temp_file = "./WND_urls"
 
-output_file = '../articles/WND.csv'
-fieldnames = ['title', 'content', 'publishedAt', 'url']
-with open(output_file, 'w') as csvfile:
+output_file = "../articles/WND.csv"
+fieldnames = ["title", "content", "publishedAt", "url"]
+with open(output_file, "w") as csvfile:
     writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
     writer.writeheader()
 
-'''get all article urls'''
+"""get all article urls"""
 if REFETCH_URLS:
     article_urls = set()
-    url1 = 'https://www.wnd.com/?s=coronavirus'
-    url2 = 'https://www.wnd.com/?s=covid-19'
-    url3 = 'https://www.wnd.com/?s=covid'
+    url1 = "https://www.wnd.com/?s=coronavirus"
+    url2 = "https://www.wnd.com/?s=covid-19"
+    url3 = "https://www.wnd.com/?s=covid"
 
-    driver = webdriver.Chrome('/Users/lynnee/Tools/chromedriver')
+    driver = webdriver.Chrome("/Users/lynnee/Tools/chromedriver")
     SCROLL_PAUSE_TIME = 0.5
     EXTRA_WAIT = 60
 
@@ -52,12 +52,12 @@ if REFETCH_URLS:
             last_height = new_height
 
             # stop if date is unsorted
-            soup = BeautifulSoup(driver.page_source,'html.parser')
-            main_content = soup.find('div', class_='archive-latest')
-            last = main_content.find_all('article')[-1]
-            dt_s = last.find('span', class_='entry-date').get_text()
-            dt_s = dt_s.split('at')[0].strip()
-            dt = datetime.strptime(dt_s, '%B %d, %Y')
+            soup = BeautifulSoup(driver.page_source, "html.parser")
+            main_content = soup.find("div", class_="archive-latest")
+            last = main_content.find_all("article")[-1]
+            dt_s = last.find("span", class_="entry-date").get_text()
+            dt_s = dt_s.split("at")[0].strip()
+            dt = datetime.strptime(dt_s, "%B %d, %Y")
             if dt > prev_dt:
                 break
             else:
@@ -65,41 +65,41 @@ if REFETCH_URLS:
 
         time.sleep(SCROLL_PAUSE_TIME)
 
-        soup = BeautifulSoup(driver.page_source,'html.parser')
-        main_content = soup.find('div', class_='archive-latest')
-        articles = main_content.find_all('article')
+        soup = BeautifulSoup(driver.page_source, "html.parser")
+        main_content = soup.find("div", class_="archive-latest")
+        articles = main_content.find_all("article")
         for entry in articles:
-            item = entry.find('div', class_='entry-image')
-            article_urls.add(item.a['href'])
+            item = entry.find("div", class_="entry-image")
+            article_urls.add(item.a["href"])
 
     driver.quit()
 
     print(len(article_urls))
-    with open(url_temp_file, 'wb') as fp:
+    with open(url_temp_file, "wb") as fp:
         pickle.dump(article_urls, fp)
 
-'''get content for each article'''
-with open (url_temp_file, 'rb') as fp:
+"""get content for each article"""
+with open(url_temp_file, "rb") as fp:
     article_urls = pickle.load(fp)
 
 for link in tqdm(article_urls):
     req = requests.get(link)
     page = req.content
-    soup = BeautifulSoup(page, 'html.parser')
+    soup = BeautifulSoup(page, "html.parser")
 
     # title
-    header = soup.find('header', class_='entry-header')
-    title = header.find('h1', class_='entry-title').get_text()
+    header = soup.find("header", class_="entry-header")
+    title = header.find("h1", class_="entry-title").get_text()
 
     # content
-    article = soup.find('div', class_='entry-content')
-    text = article.find_all(['p', 'li', 'h1', 'h2', 'h3'])
-    content = '\n'.join([i.get_text() for i in text])
+    article = soup.find("div", class_="entry-content")
+    text = article.find_all(["p", "li", "h1", "h2", "h3"])
+    content = "\n".join([i.get_text() for i in text])
 
     # publishedAt
-    metadata = header.find('div', class_='entry-meta')
-    dt = metadata.find_all('span')[1].get_text().split('Published ')[1].strip()
+    metadata = header.find("div", class_="entry-meta")
+    dt = metadata.find_all("span")[1].get_text().split("Published ")[1].strip()
 
-    with open(output_file, 'a') as csvfile:
+    with open(output_file, "a") as csvfile:
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-        writer.writerow({'title': title, 'content': content, 'publishedAt': dt, 'url': link}) 
+        writer.writerow({"title": title, "content": content, "publishedAt": dt, "url": link})
