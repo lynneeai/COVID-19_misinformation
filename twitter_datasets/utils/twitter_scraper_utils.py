@@ -13,6 +13,7 @@ import requests
 import time
 import traceback
 from TwitterAPI import TwitterAPI
+from ratelimit import limits, sleep_and_retry
 from utils.all_utils import print_dict
 from api_keys import TWITTER_API_KEYS
 
@@ -231,7 +232,7 @@ def premium_search_retweet(product, label, query, from_date, to_date, bearer_tok
     return tweets_details, next_token
 
 
-def get_tweet_details_labs(tweet_dict, metric_fieldname="stats"):
+def get_tweet_details_labs(tweet_dict, metric_fieldname="public_metrics"):
     data = tweet_dict["data"]
     # if is retweet
     # returns  tweet_id, author_id, created_at, parent_tweet_id, parent_tweet_author_id, like_count, quote_count, reply_count, retweet_count
@@ -313,11 +314,13 @@ def get_single_tweet_by_id_labs(id, bearer_token):
     if "errors" in r_json:
         raise Exception(f"[Self Defined]Error in response!")
 
-    return get_tweet_details_labs(response.json(), metric_fieldname="public_metrics")
+    return get_tweet_details_labs(tweet_dict=response.json(), metric_fieldname="public_metrics")
 
 
+@sleep_and_retry
+@limits(calls=450, period=900)
 def recent_search_labs(query, start_time, end_time, next_token, bearer_token):
-    endpoint_url = f"https://api.twitter.com/labs/2/tweets/search"
+    endpoint_url = f"https://api.twitter.com/2/tweets/search/recent"
     headers = {"Accept-Encoding": "gzip"}
     if next_token:
         params = {"query": query, "tweet.fields": "created_at,entities,public_metrics,author_id,referenced_tweets", "start_time": start_time, "end_time": end_time, "max_results": 100, "next_token": next_token}
@@ -326,7 +329,7 @@ def recent_search_labs(query, start_time, end_time, next_token, bearer_token):
 
     response = requests.get(endpoint_url, auth=bearer_token, headers=headers, params=params)
     if response.status_code > 201:
-        print_dict(params)
+        print(f"{response.status_code}: {response.text}")
         raise Exception(f"{response.status_code}: {response.text}")
 
     r_json = response.json()
@@ -340,7 +343,7 @@ def recent_search_labs(query, start_time, end_time, next_token, bearer_token):
     for tweet_dict in tweet_dicts:
         try:
             tweet_dict = {"data": tweet_dict}
-            r_obj_list.append(get_tweet_details_labs(tweet_dict, metric_fieldname="public_metrics"))
+            r_obj_list.append(get_tweet_details_labs(tweet_dict=tweet_dict, metric_fieldname="public_metrics"))
         except Exception as e:
             print(e)
 

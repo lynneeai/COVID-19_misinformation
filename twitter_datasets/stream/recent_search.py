@@ -150,7 +150,11 @@ if __name__ == "__main__":
             start_time = checkpoint_timestamp - timedelta(days=7) + timedelta(minutes=1)
             rs = RECENT_SEARCH(SEARCH_QUERY, start_time, checkpoint_timestamp, BEARER_TOKEN, CONN, CUR)
             while rs.has_next_batch() and (datetime.now().astimezone(pytz.utc) - checkpoint_timestamp < timedelta(days=1)):
-                rs.save_next_batch()
+                try:
+                    rs.save_next_batch()
+                except Exception as e:
+                    if "429" in str(e) or "Rate limit exceeded" in str(e):
+                        program_sleep(900)
                 rs.update_start_time(datetime.now().astimezone(pytz.utc) - timedelta(days=7) + timedelta(minutes=1))
 
             if datetime.now().astimezone(pytz.utc) - checkpoint_timestamp < timedelta(days=1):

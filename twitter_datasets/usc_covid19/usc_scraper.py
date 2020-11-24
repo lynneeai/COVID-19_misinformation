@@ -30,14 +30,18 @@ class USC_SCRAPER:
 
         self.cached_ids = []
         self.next_cached_id_ptr = 29929
-        self.log_file = f'../logs/usc_scraper_{datetime.now().strftime("%Y%m%d_%H:%M:%S")}.txt'
+        self.log_file = (
+            f'../logs/usc_scraper_{datetime.now().strftime("%Y%m%d_%H:%M:%S")}.txt'
+        )
 
         self.is_first_batch = True
 
     def next_batch(self):
         if self.next_cached_id_ptr >= len(self.cached_ids):
             self.cached_ids = []
-            self.next_cached_id_ptr = self.next_cached_id_ptr if self.is_first_batch else 0
+            self.next_cached_id_ptr = (
+                self.next_cached_id_ptr if self.is_first_batch else 0
+            )
             self.current_id_file = self.id_files[self.next_file_ptr]
             with open(self.current_id_file, "r") as infile:
                 for line in infile:
@@ -45,7 +49,8 @@ class USC_SCRAPER:
                     self.cached_ids.append(tweet_id)
 
             write_to_log(
-                self.log_file, f'-------[{datetime.now().strftime("%H:%M:%S")}] Starting processing file with idx {self.next_file_ptr}: {self.current_id_file}-------',
+                self.log_file,
+                f'-------[{datetime.now().strftime("%H:%M:%S")}] Starting processing file with idx {self.next_file_ptr}: {self.current_id_file}-------',
             )
             self.next_file_ptr += 1
             self.is_first_batch = False
@@ -66,7 +71,16 @@ class USC_SCRAPER:
                 obj = get_single_tweet_by_id(tweet_id)
                 if obj:
                     covid19_tweets_todb.append(
-                        [obj["tweet_id"], obj["full_text"], obj["created_at"], obj["language"], obj["hashtags_str"], obj["mentions_str"], obj["favorite_count"], obj["retweet_count"],]
+                        [
+                            obj["tweet_id"],
+                            obj["full_text"],
+                            obj["created_at"],
+                            obj["language"],
+                            obj["hashtags_str"],
+                            obj["mentions_str"],
+                            obj["favorite_count"],
+                            obj["retweet_count"],
+                        ]
                     )
                     for media in obj["all_media_urls"]:
                         if media["media_type"] == "photo":
@@ -86,7 +100,8 @@ class USC_SCRAPER:
                         limit_exceeded = True
                         self.next_cached_id_ptr = idx
                         write_to_log(
-                            self.log_file, f'**[{datetime.now().strftime("%H:%M:%S")}]** Finished {idx} tweets in file {self.next_file_ptr - 1}! Next tweet idx: {self.next_cached_id_ptr}',
+                            self.log_file,
+                            f'**[{datetime.now().strftime("%H:%M:%S")}]** Finished {idx} tweets in file {self.next_file_ptr - 1}! Next tweet idx: {self.next_cached_id_ptr}',
                         )
                         trange.close()
                         break
@@ -100,7 +115,8 @@ class USC_SCRAPER:
         if not limit_exceeded:
             self.next_cached_id_ptr = len(self.cached_ids)
             write_to_log(
-                self.log_file, f'-------[{datetime.now().strftime("%H:%M:%S")}] Finished processing file with idx {self.next_file_ptr - 1}: {self.current_id_file}-------\n',
+                self.log_file,
+                f'-------[{datetime.now().strftime("%H:%M:%S")}] Finished processing file with idx {self.next_file_ptr - 1}: {self.current_id_file}-------\n',
             )
 
         return {
@@ -113,4 +129,6 @@ class USC_SCRAPER:
         }
 
     def has_next_batch(self):
-        return (self.next_file_ptr < len(self.id_files)) or (self.next_cached_id_ptr < len(self.cached_ids))
+        return (self.next_file_ptr < len(self.id_files)) or (
+            self.next_cached_id_ptr < len(self.cached_ids)
+        )

@@ -27,7 +27,19 @@ DROP_TABLE = False
 
 """Tables Configs"""
 # -------covid19_tweets-------
-COVID19_TWEETS = TABLE("covid19_tweets", ["tweet_id", "full_text", "created_at", "language", "hashtags_str", "mentions_str", "favorite_count", "retweet_count",],)
+COVID19_TWEETS = TABLE(
+    "covid19_tweets",
+    [
+        "tweet_id",
+        "full_text",
+        "created_at",
+        "language",
+        "hashtags_str",
+        "mentions_str",
+        "favorite_count",
+        "retweet_count",
+    ],
+)
 COVID19_TWEETS.add_constraint(COVID19_TWEETS.cols.tweet_id, "TEXT PRIMARY KEY")
 COVID19_TWEETS.add_constraint(COVID19_TWEETS.cols.full_text, "TEXT NOT NULL")
 COVID19_TWEETS.add_constraint(COVID19_TWEETS.cols.created_at, "TEXT NOT NULL")
@@ -43,7 +55,9 @@ IMAGES = TABLE("images", ["tweet_id", "media_url"])
 IMAGES.add_constraint(IMAGES.cols.tweet_id, "TEXT NOT NULL")
 IMAGES.add_constraint(IMAGES.cols.media_url, "TEXT NOT NULL")
 IMAGES.add_primary_key((IMAGES.cols.tweet_id, IMAGES.cols.media_url))
-IMAGES.add_foreign_key((IMAGES.cols.tweet_id, f"{COVID19_TWEETS.name}({COVID19_TWEETS.cols.tweet_id})"))
+IMAGES.add_foreign_key(
+    (IMAGES.cols.tweet_id, f"{COVID19_TWEETS.name}({COVID19_TWEETS.cols.tweet_id})")
+)
 assert len(IMAGES.cols) == len(IMAGES.cols_const)
 
 # -------videos-------
@@ -51,7 +65,9 @@ VIDEOS = TABLE("videos", ["tweet_id", "media_url"])
 VIDEOS.add_constraint(VIDEOS.cols.tweet_id, "TEXT NOT NULL")
 VIDEOS.add_constraint(VIDEOS.cols.media_url, "TEXT NOT NULL")
 VIDEOS.add_primary_key((VIDEOS.cols.tweet_id, VIDEOS.cols.media_url))
-VIDEOS.add_foreign_key((VIDEOS.cols.tweet_id, f"{COVID19_TWEETS.name}({COVID19_TWEETS.cols.tweet_id})"))
+VIDEOS.add_foreign_key(
+    (VIDEOS.cols.tweet_id, f"{COVID19_TWEETS.name}({COVID19_TWEETS.cols.tweet_id})")
+)
 assert len(VIDEOS.cols) == len(VIDEOS.cols_const)
 
 # -------gifs-------
@@ -59,7 +75,9 @@ GIFS = TABLE("gifs", ["tweet_id", "media_url"])
 GIFS.add_constraint(GIFS.cols.tweet_id, "TEXT NOT NULL")
 GIFS.add_constraint(GIFS.cols.media_url, "TEXT NOT NULL")
 GIFS.add_primary_key((GIFS.cols.tweet_id, GIFS.cols.media_url))
-GIFS.add_foreign_key((GIFS.cols.tweet_id, f"{COVID19_TWEETS.name}({COVID19_TWEETS.cols.tweet_id})"))
+GIFS.add_foreign_key(
+    (GIFS.cols.tweet_id, f"{COVID19_TWEETS.name}({COVID19_TWEETS.cols.tweet_id})")
+)
 assert len(GIFS.cols) == len(GIFS.cols_const)
 
 # -------externals-------
@@ -67,13 +85,20 @@ EXTERNALS = TABLE("externals", ["tweet_id", "media_url"])
 EXTERNALS.add_constraint(EXTERNALS.cols.tweet_id, "TEXT NOT NULL")
 EXTERNALS.add_constraint(EXTERNALS.cols.media_url, "TEXT NOT NULL")
 EXTERNALS.add_primary_key((EXTERNALS.cols.tweet_id, EXTERNALS.cols.media_url))
-EXTERNALS.add_foreign_key((EXTERNALS.cols.tweet_id, f"{COVID19_TWEETS.name}({COVID19_TWEETS.cols.tweet_id})"))
+EXTERNALS.add_foreign_key(
+    (EXTERNALS.cols.tweet_id, f"{COVID19_TWEETS.name}({COVID19_TWEETS.cols.tweet_id})")
+)
 assert len(EXTERNALS.cols) == len(EXTERNALS.cols_const)
 
 # -------election2020_tweets-------
 ELECTION_TWEETS = TABLE("election2020_tweets", ["tweet_id"])
 ELECTION_TWEETS.add_constraint(ELECTION_TWEETS.cols.tweet_id, "TEXT PRIMARY KEY")
-ELECTION_TWEETS.add_foreign_key((ELECTION_TWEETS.cols.tweet_id, f"{COVID19_TWEETS.name}({COVID19_TWEETS.cols.tweet_id})",))
+ELECTION_TWEETS.add_foreign_key(
+    (
+        ELECTION_TWEETS.cols.tweet_id,
+        f"{COVID19_TWEETS.name}({COVID19_TWEETS.cols.tweet_id})",
+    )
+)
 assert len(ELECTION_TWEETS.cols) == len(ELECTION_TWEETS.cols_const)
 
 if __name__ == "__main__":
@@ -91,7 +116,11 @@ if __name__ == "__main__":
 
         for t in [COVID19_TWEETS, IMAGES, VIDEOS, GIFS, EXTERNALS, ELECTION_TWEETS]:
             create_table(
-                table_name=t.name, cols_constraints_dict=t.cols_const, cur=CUR, primary_key=t.pk, foreign_keys=t.fks,
+                table_name=t.name,
+                cols_constraints_dict=t.cols_const,
+                cur=CUR,
+                primary_key=t.pk,
+                foreign_keys=t.fks,
             )
             CONN.commit()
 

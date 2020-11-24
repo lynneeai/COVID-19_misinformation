@@ -62,8 +62,8 @@ assert len(RETWEETS.cols) == len(RETWEETS.cols_const)
 
 class FILTERED_STREAM:
     def __init__(self, bearer_token, filter_rules, db_conn, db_cur):
-        self.stream_url = "https://api.twitter.com/labs/1/tweets/stream/filter"
-        self.rules_url = "https://api.twitter.com/labs/1/tweets/stream/filter/rules"
+        self.stream_url = "https://api.twitter.com/2/tweets/search/stream"
+        self.rules_url = "https://api.twitter.com/2/tweets/search/stream/rules"
         self.auth = bearer_token
         self.filter_rules = filter_rules
         self.db_conn = db_conn
@@ -109,7 +109,7 @@ class FILTERED_STREAM:
         write_to_log(self.log_file, f"Streaming with filter rules: {str(current_rules)}...")
 
     def stream_connect(self):
-        response = requests.get(self.stream_url, auth=self.auth, stream=True, params={"tweet.format": "detailed", "user.format": "detailed", "expansions": "referenced_tweets.id,referenced_tweets.id.author_id"})
+        response = requests.get(self.stream_url, auth=self.auth, stream=True, params={"tweet.fields": "author_id,created_at,entities,text,public_metrics", "user.fields": "id", "expansions": "referenced_tweets.id,referenced_tweets.id.author_id"})
 
         if response.status_code > 201:
             raise Exception(f"{response.status_code}: {response.text}")
@@ -119,7 +119,7 @@ class FILTERED_STREAM:
         for response_line in response.iter_lines():
             if response_line:
                 tweet_dict = json.loads(response_line)
-                r_obj = get_tweet_details_labs(tweet_dict)
+                r_obj = get_tweet_details_labs(tweet_dict, metric_fieldname="public_metrics")
 
                 # find original tweet if is retweet
                 while r_obj["is_retweet"]:

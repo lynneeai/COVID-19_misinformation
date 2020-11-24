@@ -38,5 +38,5 @@ def print_dict(d):
 
 
 def write_to_log(log_file, msg):
-    with open(log_file, "a") as outfile:
+    with open(log_file, "a+") as outfile:
         outfile.writelines(f"{msg}\n")
