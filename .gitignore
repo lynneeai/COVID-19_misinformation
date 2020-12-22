@@ -129,7 +129,7 @@ dmypy.json
 .vscode/settings.json
 
 # twitter data
-USC_dataset/
+dataset/
 
 # api keys
 api_keys*.py
